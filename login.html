@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="dark">
+  <title>Sign in · ColdIQ Lookup</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 20% 0%,#1b2d59 0,transparent 40%),#0a1020;color:#eff6ff;font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}.panel{width:min(420px,100%);padding:28px;border:1px solid #34415c;border-radius:20px;background:#111a2df2;box-shadow:0 24px 80px #0003}.logo{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(135deg,#9bb4ff,#a89aff);color:#10172a;font-weight:900;font-size:20px}.eyebrow{margin-top:22px;color:#b5c4ff;text-transform:uppercase;font-size:11px;letter-spacing:.16em;font-weight:800}h1{font-size:29px;letter-spacing:-.04em;margin:6px 0}p{color:#aab8cf;margin:0 0 22px}label{display:block;font-size:13px;margin-bottom:8px;font-weight:650}input{width:100%;padding:13px 14px;border-radius:11px;border:1px solid #3b4965;background:#0b1323;color:#eff6ff;font:inherit;margin-bottom:14px;outline:none}input:focus{border-color:#9bb4ff}button{width:100%;padding:13px;border:0;border-radius:11px;background:linear-gradient(135deg,#9bb4ff,#a89aff);color:#10172a;font:inherit;font-weight:800;cursor:pointer}.error{color:#ffd0d0;background:#391d2b;border:1px solid #773c4b;border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:13px}.small{font-size:12px;color:#8292ac;margin-top:14px}
+  </style>
+</head><body>
+  <main class="panel"><div class="logo">C</div><div class="eyebrow">Contact enrichment</div><h1>ColdIQ Lookup</h1><p>Enter your app password to continue.</p>
+    {% if error %}<div class="error">{{ error }}</div>{% endif %}
+    {% if configured %}
+    <form method="post"><label for="password">App password</label><input id="password" name="password" type="password" autocomplete="current-password" required autofocus><button type="submit">Sign in →</button></form>
+    {% else %}<div class="error">APP_PASSWORD is not configured. Add it in your hosting provider's environment variables, then reload this page.</div>{% endif %}
+    <div class="small">Your ColdIQ API key is stored server-side and is never sent to the browser.</div>
+  </main>
+</body></html>

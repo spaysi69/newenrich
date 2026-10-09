@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>ColdIQ Contact Lookup</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0a1020; --panel:#111a2d; --muted:#94a3b8; --text:#eff6ff; --line:#293650; --accent:#7c9cff; --accent2:#a78bfa; --good:#78e0b0; --bad:#ff9d9d; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; font:15px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background:radial-gradient(ellipse at 20% 0%, #1b2d59 0, transparent 38%), radial-gradient(ellipse at 95% 20%, #30214e 0, transparent 30%), var(--bg); color:var(--text); }
+    .wrap { width:min(880px, calc(100% - 32px)); margin:0 auto; padding:42px 0 60px; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:42px; }
+    .brand { display:flex; align-items:center; gap:12px; font-weight:750; letter-spacing:-.025em; }
+    .logo { width:39px; height:39px; border-radius:12px; display:grid; place-items:center; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#0a1020; font-weight:900; font-size:19px; box-shadow:0 7px 28px #7c9cff35; }
+    .eyebrow { color:#b5c4ff; text-transform:uppercase; font-size:11px; letter-spacing:.16em; font-weight:800; }
+    h1 { margin:8px 0 12px; font-size:clamp(30px, 5vw, 44px); line-height:1.1; letter-spacing:-.045em; }
+    .intro { max-width:620px; color:#afbdd2; font-size:16px; margin:0 0 27px; }
+    .panel { border:1px solid #34415c; background:linear-gradient(160deg,#151f35ef,#0e1728f5); border-radius:20px; padding:25px; box-shadow:0 24px 80px #0003; }
+    label.field-label { display:block; font-size:13px; color:#d9e3f4; margin:0 0 9px; font-weight:650; }
+    .url-row { display:flex; gap:10px; }
+    input[type=url], input[type=password] { width:100%; min-width:0; padding:14px 15px; border-radius:12px; border:1px solid #3b4965; background:#0b1323; color:var(--text); font:inherit; outline:none; transition:border-color .15s, box-shadow .15s; }
+    input:focus { border-color:var(--accent); box-shadow:0 0 0 3px #7c9cff25; }
+    button { border:0; border-radius:12px; padding:13px 18px; background:linear-gradient(135deg,#9bb4ff,#a89aff); color:#10172a; font:inherit; font-weight:800; cursor:pointer; transition:transform .12s, opacity .12s; white-space:nowrap; }
+    button:hover { transform:translateY(-1px); } button:disabled { opacity:.6; cursor:wait; transform:none; }
+    .options { display:flex; flex-wrap:wrap; gap:12px 22px; padding:17px 0 0; }
+    .option { display:flex; align-items:center; gap:9px; color:#c8d3e5; font-size:13px; cursor:pointer; }
+    input[type=checkbox] { accent-color:#9bb4ff; width:15px; height:15px; }
+    .hint { color:#7f90aa; font-size:12px; margin:14px 0 0; }
+    .status { display:none; margin-top:16px; padding:12px 14px; border-radius:11px; font-size:13px; white-space:pre-wrap; overflow-wrap:anywhere; }
+    .status.error { display:block; border:1px solid #773c4b; background:#391d2b; color:#ffd0d0; }
+    .status.loading { display:block; border:1px solid #344b7a; background:#172849; color:#d7e3ff; }
+    .results { display:none; margin-top:22px; }
+    .result-head { display:flex; align-items:flex-start; justify-content:space-between; gap:15px; margin-bottom:14px; }
+    h2 { margin:0; font-size:20px; letter-spacing:-.025em; }
+    .sub { color:var(--muted); font-size:12px; margin-top:3px; overflow-wrap:anywhere; }
+    .result-actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .secondary { background:#202d46; border:1px solid #3a4a68; color:#dbe7ff; padding:8px 11px; font-size:12px; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    .data-card { min-width:0; padding:15px; border:1px solid var(--line); border-radius:13px; background:#0b1424a8; }
+    .data-label { color:#8fa2bf; text-transform:uppercase; letter-spacing:.09em; font-size:10px; font-weight:800; margin-bottom:6px; }
+    .data-value { color:#eff6ff; overflow-wrap:anywhere; white-space:pre-wrap; }
+    .data-value a { color:#b9c8ff; text-decoration:none; } .data-value a:hover { text-decoration:underline; }
+    details { border:1px solid var(--line); border-radius:13px; margin-top:12px; padding:13px 15px; background:#0b1424a8; }
+    summary { color:#cbd7ec; font-size:13px; font-weight:650; cursor:pointer; }
+    pre { color:#c0cce1; overflow:auto; max-height:420px; font-size:12px; line-height:1.6; white-space:pre-wrap; overflow-wrap:anywhere; }
+    .empty { border:1px dashed #3a4965; border-radius:13px; color:#aab7cb; padding:18px; font-size:14px; }
+    footer { margin-top:25px; display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; color:#74839e; font-size:12px; }
+    footer a { color:#9eafcf; text-decoration:none; }
+    @media(max-width:600px) { .wrap{padding-top:25px}.panel{padding:18px}.url-row{flex-direction:column}.url-row button{width:100%}.grid{grid-template-columns:1fr}.result-head{flex-direction:column}header{margin-bottom:32px} }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div class="brand"><div class="logo">C</div><span>ColdIQ Lookup</span></div>
+      <form method="post" action="/logout"><button class="secondary" type="submit">Log out</button></form>
+    </header>
+    <div class="eyebrow">Contact enrichment</div>
+    <h1>Find contact details<br>from a LinkedIn URL.</h1>
+    <p class="intro">Paste a person's LinkedIn profile and get the contact information ColdIQ can find. One profile per lookup, no spreadsheets or extra steps.</p>
+
+    <section class="panel" aria-label="Find a contact">
+      <form id="lookup-form">
+        <label class="field-label" for="linkedin-url">LinkedIn profile URL</label>
+        <div class="url-row">
+          <input id="linkedin-url" name="linkedin_url" type="url" placeholder="https://www.linkedin.com/in/jane-doe" autocomplete="url" required maxlength="2048">
+          <button id="submit-btn" type="submit">Find contact <span aria-hidden="true">↗</span></button>
+        </div>
+        <div class="options">
+          <label class="option"><input id="include-email" type="checkbox" checked> Find work email</label>
+          <label class="option"><input id="include-phone" type="checkbox"> Find phone number <span style="color:#8f9db4">(may cost 10 extra credits)</span></label>
+        </div>
+        <p class="hint">Your API key stays on the server. ColdIQ charges according to your API plan and the options selected.</p>
+      </form>
+      <div id="status" class="status" role="status" aria-live="polite"></div>
+    </section>
+
+    <section id="results" class="results" aria-label="Contact lookup results">
+      <div class="result-head">
+        <div><h2>Lookup result</h2><div id="result-sub" class="sub"></div></div>
+        <div class="result-actions"><button id="copy-json" class="secondary" type="button">Copy JSON</button><button id="copy-contact" class="secondary" type="button">Copy contact</button></div>
+      </div>
+      <div id="field-grid" class="grid"></div>
+      <details><summary>View complete ColdIQ response</summary><pre id="raw-json"></pre></details>
+    </section>
+    <footer><span>Powered by the ColdIQ API</span><a href="https://coldiq.com/marketplace/apis/lima-data" target="_blank" rel="noopener noreferrer">API documentation ↗</a></footer>
+  </main>
+<script>
+  const form = document.getElementById('lookup-form');
+  const input = document.getElementById('linkedin-url');
+  const submitBtn = document.getElementById('submit-btn');
+  const statusBox = document.getElementById('status');
+  const results = document.getElementById('results');
+  const fieldGrid = document.getElementById('field-grid');
+  const rawJson = document.getElementById('raw-json');
+  let lastResult = null;
+  let lastUrl = '';
+
+  function status(message, kind) {
+    statusBox.textContent = message;
+    statusBox.className = 'status ' + kind;
+  }
+  function labelize(key) {
+    return String(key).replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[_.-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+  function stringify(value) {
+    if (value === null || value === undefined || value === '') return '';
+    if (Array.isArray(value)) return value.map(stringify).filter(Boolean).join(', ');
+    if (typeof value === 'object') {
+      for (const key of ['value', 'address', 'email', 'phone', 'number', 'name', 'url']) {
+        if (value[key] !== undefined && (typeof value[key] !== 'object')) return String(value[key]);
+      }
+      return JSON.stringify(value);
+    }
+    return String(value);
+  }
+  function collectLeaves(value, path = '', out = []) {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      for (const [key, child] of Object.entries(value)) collectLeaves(child, path ? path + '.' + key : key, out);
+    } else if (Array.isArray(value)) {
+      if (value.every(v => v === null || ['string','number','boolean'].includes(typeof v))) {
+        const val = stringify(value);
+        if (val) out.push({ key: path, value: val });
+      } else {
+        value.forEach((child, i) => collectLeaves(child, path ? path + '.' + (i + 1) : String(i + 1), out));
+      }
+    } else {
+      const val = stringify(value);
+      if (val) out.push({ key: path || 'value', value: val });
+    }
+    return out;
+  }
+  function findByAliases(source, aliases) {
+    const normalizedAliases = aliases.map(a => a.toLowerCase().replace(/[^a-z0-9]/g, ''));
+    const leaves = collectLeaves(source);
+    // Prefer exact key matches, then keys such as person.work_email.
+    for (const alias of normalizedAliases) {
+      const found = leaves.find(x => x.key.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '') === alias);
+      if (found) return found.value;
+    }
+    for (const alias of normalizedAliases) {
+      const found = leaves.find(x => x.key.toLowerCase().replace(/[^a-z0-9]/g, '').includes(alias));
+      if (found) return found.value;
+    }
+    return '';
+  }
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function addCard(label, value) {
+    if (!value) return;
+    const card = document.createElement('div');
+    card.className = 'data-card';
+    const clean = String(value);
+    const looksLikeUrl = /^https?:\/\//i.test(clean) && clean.length < 2048;
+    card.innerHTML = '<div class="data-label">' + escapeHtml(label) + '</div><div class="data-value">' + (looksLikeUrl ? '<a href="' + escapeHtml(clean) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(clean) + '</a>' : escapeHtml(clean)) + '</div>';
+    fieldGrid.appendChild(card);
+  }
+  function showResult(result, requestedUrl) {
+    lastResult = result;
+    lastUrl = requestedUrl;
+    fieldGrid.innerHTML = '';
+    rawJson.textContent = JSON.stringify(result, null, 2);
+    document.getElementById('result-sub').textContent = requestedUrl;
+
+    let name = findByAliases(result, ['full_name','fullname','person_name','name']);
+    if (!name) {
+      const first = findByAliases(result, ['first_name','firstname','given_name']);
+      const last = findByAliases(result, ['last_name','lastname','family_name','surname']);
+      name = [first, last].filter(Boolean).join(' ');
+    }
+    const cards = [
+      ['Name', name],
+      ['Job title', findByAliases(result, ['job_title','title','headline','position','role'])],
+      ['Company', findByAliases(result, ['company_name','current_company','employer','company'])],
+      ['Work email', findByAliases(result, ['work_email','business_email','professional_email','email'])],
+      ['Phone', findByAliases(result, ['phone_number','phone_numbers','mobile_phone','mobile','phone'])],
+      ['Location', findByAliases(result, ['location','city','country'])],
+      ['LinkedIn URL', findByAliases(result, ['linkedin_url','linkedin_profile_url','profile_url','url'])]
+    ];
+    cards.forEach(([label, value]) => addCard(label, value));
+    if (!fieldGrid.children.length) {
+      const empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.style.gridColumn = '1 / -1';
+      empty.textContent = 'ColdIQ returned a response, but no familiar contact fields were detected. Open “View complete ColdIQ response” to inspect all returned data.';
+      fieldGrid.appendChild(empty);
+    }
+    results.style.display = 'block';
+    results.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    const linkedinUrl = input.value.trim();
+    if (!linkedinUrl) return;
+    results.style.display = 'none';
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Looking up…';
+    status('Contacting ColdIQ…', 'loading');
+    try {
+      const response = await fetch('/api/enrich', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          linkedin_url: linkedinUrl,
+          include_work_email: document.getElementById('include-email').checked,
+          include_phone: document.getElementById('include-phone').checked
+        })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const details = data.details ? '\n' + JSON.stringify(data.details, null, 2) : '';
+        throw new Error((data.error || 'Lookup failed.') + details);
+      }
+      statusBox.className = 'status';
+      statusBox.textContent = '';
+      showResult(data.result, linkedinUrl);
+    } catch (error) {
+      status(error.message || 'Something went wrong. Please try again.', 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'Find contact <span aria-hidden="true">↗</span>';
+    }
+  });
+
+  async function copyText(text, button, successLabel) {
+    try {
+      await navigator.clipboard.writeText(text);
+      const before = button.textContent;
+      button.textContent = successLabel;
+      setTimeout(() => button.textContent = before, 1200);
+    } catch (_) {
+      status('Clipboard access was blocked by this browser. You can select and copy from the response panel.', 'error');
+    }
+  }
+  document.getElementById('copy-json').addEventListener('click', event => {
+    if (lastResult) copyText(JSON.stringify(lastResult, null, 2), event.currentTarget, 'Copied');
+  });
+  document.getElementById('copy-contact').addEventListener('click', event => {
+    if (!lastResult) return;
+    const cards = [
+      ['Name', findByAliases(lastResult, ['full_name','fullname','person_name','name'])],
+      ['Job title', findByAliases(lastResult, ['job_title','title','headline','position','role'])],
+      ['Company', findByAliases(lastResult, ['company_name','current_company','employer','company'])],
+      ['Work email', findByAliases(lastResult, ['work_email','business_email','professional_email','email'])],
+      ['Phone', findByAliases(lastResult, ['phone_number','phone_numbers','mobile_phone','mobile','phone'])],
+      ['Location', findByAliases(lastResult, ['location','city','country'])],
+      ['LinkedIn URL', findByAliases(lastResult, ['linkedin_url','linkedin_profile_url','profile_url','url'])]
+    ].filter(([, value]) => value);
+    const text = cards.length ? cards.map(([k,v]) => k + ': ' + v).join('\n') : JSON.stringify(lastResult, null, 2);
+    copyText(text, event.currentTarget, 'Copied');
+  });
+</script>
+</body>
+</html>
