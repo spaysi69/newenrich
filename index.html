@@ -131,10 +131,15 @@
     }
     return out;
   }
+  function isStatusFlag(value) {
+    return typeof value === 'string' && /^(true|false|null|undefined)$/i.test(value.trim());
+  }
   function findByAliases(source, aliases) {
     const normalizedAliases = aliases.map(a => a.toLowerCase().replace(/[^a-z0-9]/g, ''));
-    const leaves = collectLeaves(source);
-    // Prefer exact key matches, then keys such as person.work_email.
+    // IMPORTANT: don't mistake fields like work_email_found: true or phone_available: true
+    // for the actual contact value.
+    const leaves = collectLeaves(source).filter(x => !isStatusFlag(x.value));
+    // Prefer exact key matches, then nested keys such as person.work_email.email.
     for (const alias of normalizedAliases) {
       const found = leaves.find(x => x.key.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '') === alias);
       if (found) return found.value;
@@ -144,6 +149,27 @@
       if (found) return found.value;
     }
     return '';
+  }
+  function findEmailValue(source) {
+    const leaves = collectLeaves(source).filter(x => !isStatusFlag(x.value));
+    const validEmail = value => /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(String(value || '').trim());
+    // Prefer email-address fields, but fall back to any genuine email string in the response.
+    const preferred = leaves.find(x => /email|e_mail/i.test(x.key) && validEmail(x.value));
+    if (preferred) return String(preferred.value).trim();
+    const any = leaves.find(x => validEmail(x.value));
+    return any ? String(any.value).trim() : '';
+  }
+  function findPhoneValue(source) {
+    const leaves = collectLeaves(source).filter(x => !isStatusFlag(x.value));
+    const isPhone = value => {
+      const raw = String(value || '').trim();
+      const digits = raw.replace(/\D/g, '');
+      return digits.length >= 7 && digits.length <= 15 && /^[+\d(][\d\s().\/-]*\d$/.test(raw);
+    };
+    // Phone endpoints often return nested objects like phones[0].number; search those paths
+    // for an actual number, not a boolean phone-found flag.
+    const preferred = leaves.find(x => /(phone|mobile|telephone|tel|cell)/i.test(x.key) && isPhone(x.value));
+    return preferred ? String(preferred.value).trim() : '';
   }
   function escapeHtml(value) {
     return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -174,8 +200,8 @@
       ['Name', name],
       ['Job title', findByAliases(result, ['job_title','title','headline','position','role'])],
       ['Company', findByAliases(result, ['company_name','current_company','employer','company'])],
-      ['Work email', findByAliases(result, ['work_email','business_email','professional_email','email'])],
-      ['Phone', findByAliases(result, ['phone_number','phone_numbers','mobile_phone','mobile','phone'])],
+      ['Work email', findEmailValue(result) || 'Not returned by ColdIQ'],
+      ['Phone', findPhoneValue(result) || 'Not returned by ColdIQ'],
       ['Location', findByAliases(result, ['location','city','country'])],
       ['LinkedIn URL', findByAliases(result, ['linkedin_url','linkedin_profile_url','profile_url','url'])]
     ];
@@ -244,8 +270,8 @@
       ['Name', findByAliases(lastResult, ['full_name','fullname','person_name','name'])],
       ['Job title', findByAliases(lastResult, ['job_title','title','headline','position','role'])],
       ['Company', findByAliases(lastResult, ['company_name','current_company','employer','company'])],
-      ['Work email', findByAliases(lastResult, ['work_email','business_email','professional_email','email'])],
-      ['Phone', findByAliases(lastResult, ['phone_number','phone_numbers','mobile_phone','mobile','phone'])],
+      ['Work email', findEmailValue(lastResult) || 'Not returned by ColdIQ'],
+      ['Phone', findPhoneValue(lastResult) || 'Not returned by ColdIQ'],
       ['Location', findByAliases(lastResult, ['location','city','country'])],
       ['LinkedIn URL', findByAliases(lastResult, ['linkedin_url','linkedin_profile_url','profile_url','url'])]
     ].filter(([, value]) => value);
