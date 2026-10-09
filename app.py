@@ -4,7 +4,7 @@ from urllib.parse import urlparse, urlunparse
 import requests
 from flask import Flask, jsonify, redirect, render_template, request, session, url_for
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder=os.path.dirname(os.path.abspath(__file__)))
 app.secret_key = os.environ.get("SESSION_SECRET", "local-dev-change-this-secret")
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
